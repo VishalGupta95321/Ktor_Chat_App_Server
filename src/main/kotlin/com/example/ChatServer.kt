@@ -10,7 +10,6 @@ import com.example.utility.Constants.TYPE_MESSAGE_SEEN
 import io.ktor.http.cio.websocket.*
 import kotlinx.coroutines.isActive
 import java.util.concurrent.ConcurrentHashMap
-import javax.xml.soap.Text
 
 class ChatServer {
 
@@ -52,7 +51,7 @@ class ChatServer {
     }
 
 
-    suspend fun broadcastPending(toId:String, socket: WebSocketSession, data:String, type:String){
+    suspend fun broadcastChatStatus(toId:String, socket: WebSocketSession, data:String, type:String){
         try {
             when (type) {
                 TYPE_MESSAGE_DELIVERED -> {
@@ -69,7 +68,6 @@ class ChatServer {
                 TYPE_MESSAGE_SEEN -> {
                     if (socket.isActive) {
                         socket.send(Frame.Text(data))
-                      //  println("senttt")
                     } else {
                         server.seenMessage[toId] =
                             PendingMessages(server.seenMessage[toId]?.messages!! + data)
@@ -83,7 +81,7 @@ class ChatServer {
         }
     }
 
-    suspend fun broadcast(socket:WebSocketSession,message:String){
+    suspend fun broadcastChat(socket:WebSocketSession, message:String){
         try {
             socket.send(Frame.Text(message))
             println("${message+socket} senttt")
@@ -93,7 +91,8 @@ class ChatServer {
     }
 
     private suspend fun sendUserData(user:UserData, socket:WebSocketSession){
-        broadcast(
+        println("send user data $user")
+        broadcastChat(
             socket = socket,
             gson.toJson( UserData(
                 name = user.name,
@@ -101,7 +100,7 @@ class ChatServer {
                 about = user.about,
                 profilePhotoUri = user.profilePhotoUri,
                 lastOnline = user.lastOnline,
-             )
+              )
             )
         )
     }
