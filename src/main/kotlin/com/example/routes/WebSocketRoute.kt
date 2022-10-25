@@ -90,12 +90,8 @@ fun Route.WebSocketRoute() {
 
                         val activeUser = server.registeredUsers[payload.fromId]?.blockedUser
                         if (activeUser!=null && activeUser.contains(payload.idToBeBlocked)){
-                            val list : MutableList<String> = mutableListOf()
-                            activeUser.forEach {
-                                if (it!=payload.idToBeBlocked){
-                                    list.add(it)
-                                }
-                            }
+                            val list : MutableList<String> = activeUser.toMutableList()
+                            list.remove(payload.idToBeBlocked)
                             server.registeredUsers[payload.fromId]?.activeUser = list
                         }
                     }
@@ -105,13 +101,9 @@ fun Route.WebSocketRoute() {
 
                     val blockList = server.registeredUsers[payload.fromId]?.blockedUser
                     if (blockList != null && blockList.contains(payload.idToBeUnblocked))  {
-                        val list : MutableList<String> = mutableListOf()
-                        blockList.forEach {
-                            if (it!=payload.idToBeUnblocked){
-                                list.add(it)
-                            }
-                        }
-                        server.registeredUsers[payload.fromId]?.blockedUser = list //blockList + payload.idToBeBlocked
+                        val list : MutableList<String> = blockList.toMutableList()
+                        list.remove(payload.idToBeUnblocked)
+                        server.registeredUsers[payload.fromId]?.blockedUser = list
                     }
                 }
 
