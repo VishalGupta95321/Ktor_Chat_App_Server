@@ -21,13 +21,15 @@ repositories {
 }
 
 dependencies {
-    implementation("io.ktor:ktor-server-core:$ktor_version")
-    implementation("io.ktor:ktor-websockets:$ktor_version")
-    implementation("io.ktor:ktor-gson:$ktor_version")
-    implementation("io.ktor:ktor-server-sessions:$ktor_version")
-    implementation("io.ktor:ktor-server-netty:$ktor_version")
     implementation("ch.qos.logback:logback-classic:$logback_version")
-    testImplementation("io.ktor:ktor-server-tests:$ktor_version")
+    implementation("io.ktor:ktor-server-core-jvm:2.1.2")
+    implementation("io.ktor:ktor-server-websockets-jvm:2.1.2")
+    implementation("io.ktor:ktor-serialization-gson:2.1.2")
+    implementation("io.ktor:ktor-server-sessions-jvm:2.1.2")
+    implementation("io.ktor:ktor-server-netty-jvm:2.1.2")
+    implementation("io.ktor:ktor-server-call-logging:2.1.2")
+    implementation("io.ktor:ktor-server-content-negotiation-jvm:2.1.2")
     testImplementation("org.jetbrains.kotlin:kotlin-test-junit:$kotlin_version")
-    implementation ("com.google.code.gson:gson:2.8.6")
+    implementation ("com.google.code.gson:gson:2.9.0")
+    testImplementation("io.ktor:ktor-server-tests-jvm:2.1.2")
 }

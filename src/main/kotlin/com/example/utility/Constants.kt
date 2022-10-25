@@ -10,4 +10,5 @@ object Constants {
     const val TYPE_CONTACT_AVAILABLE = "TYPE_CONTACT_AVAILABLE"
     const val TYPE_USER_LAST_SEEN = "TYPE_USER_LAST_SEEN"
     const val TYPE_USER = "TYPE_USER"
+    const val TYPE_CONNECT_TO_SERVER = "TYPE_CONNECT_TO_SERVER"
 }

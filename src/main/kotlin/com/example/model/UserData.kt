@@ -1,4 +1,4 @@
-package com.example.data.model
+package com.example.model
 
 import com.example.utility.Constants.TYPE_USER
 
@@ -8,4 +8,4 @@ data class UserData(
     val about: String? = null,
     var lastOnline : Long? = null,
     var profilePhotoUri : String? = null
-):BaseModel(TYPE_USER)
+): BaseModel(TYPE_USER)

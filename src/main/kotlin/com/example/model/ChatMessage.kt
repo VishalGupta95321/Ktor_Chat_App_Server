@@ -1,4 +1,4 @@
-package com.example.data.model
+package com.example.model
 
 
 import com.example.utility.Constants.TYPE_CHAT_MESSAGE
@@ -12,4 +12,4 @@ data class ChatMessage(
     var delivered: Boolean = false,
     var messageSeen: Boolean = false,
     var deleted : Boolean  = false
-):BaseModel(TYPE_CHAT_MESSAGE)
+): BaseModel(TYPE_CHAT_MESSAGE)

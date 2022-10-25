@@ -1,7 +1,7 @@
 package com.example.data
 
-import com.example.data.model.UserData
-import io.ktor.http.cio.websocket.*
+import com.example.model.UserData
+import io.ktor.websocket.*
 
 data class User(
     val name: String,

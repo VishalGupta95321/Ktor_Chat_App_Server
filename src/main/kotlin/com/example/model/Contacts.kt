@@ -1,4 +1,4 @@
-package com.example.data.model
+package com.example.model
 
 data class Contacts (
     val name : String,

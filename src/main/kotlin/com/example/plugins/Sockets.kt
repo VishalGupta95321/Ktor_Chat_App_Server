@@ -1,8 +1,8 @@
 package com.example.plugins
 
 
-import io.ktor.websocket.*
-import io.ktor.application.*
+import io.ktor.server.application.*
+import io.ktor.server.websocket.*
 
 
 fun Application.configureSockets() {

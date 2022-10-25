@@ -1,3 +1,3 @@
-package com.example.data.model
+package com.example.model
 
 data class PendingMessages(val messages : List<String> )

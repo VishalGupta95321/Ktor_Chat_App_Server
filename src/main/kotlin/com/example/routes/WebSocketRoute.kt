@@ -2,19 +2,22 @@ package com.example.routes
 
 import com.example.data.User
 import com.example.data.asUserData
-import com.example.data.model.*
 import com.example.gson
+import com.example.ktor_chat_app.web_socket.data.remote.request.ConnectToServer
+import com.example.model.*
 import com.example.server
 import com.example.utility.Constants.TYPE_BLOCK_USER_REQUEST
 import com.example.utility.Constants.TYPE_CHAT_MESSAGE
+import com.example.utility.Constants.TYPE_CONNECT_TO_SERVER
 import com.example.utility.Constants.TYPE_CONTACT_AVAILABLE
 import com.example.utility.Constants.TYPE_MESSAGE_DELIVERED
 import com.example.utility.Constants.TYPE_MESSAGE_SEEN
+import com.example.utility.Constants.TYPE_REGISTER_USER
 import com.example.utility.Constants.TYPE_UNBLOCK_USER_REQUEST
 import com.example.utility.Constants.TYPE_USER_LAST_SEEN
 import com.google.gson.JsonParser
-import io.ktor.http.cio.websocket.*
-import io.ktor.routing.*
+import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.consumeEach
 
@@ -26,24 +29,60 @@ fun Route.WebSocketRoute() {
 
             when(payload){
 
+                is ConnectToServer -> {
+
+                    val clientId = payload.id
+                    val user = clientId.let { server.searchUserWithId(it) }
+
+                    if (user!=null){
+                        server.registeredUsers[user]?.socket = socket
+                        server.pendingMessage[user]!!.messages.forEach {
+                            server.broadcastPendingChat(socket, it)
+                        }
+                        server.deliveredMessage[user]!!.messages.forEach {
+                            server.broadcastPendingChat(socket, it)
+                        }
+                        server.seenMessage[user]!!.messages.forEach {
+                            server.broadcastPendingChat(socket, it)
+                        }
+                    }
+                }
+
+                is CreateUser -> {
+
+                    val clientId = payload.contactNo
+
+                    val user = clientId.let { server.searchUserWithId(it) }
+
+                    if (user==null){
+                        server.registeredUsers[clientId] = User(
+                            name = payload.name,
+                            id = clientId,
+                            socket = socket
+                        )
+                        server.pendingMessage[clientId] = PendingMessages(listOf())
+                        server.deliveredMessage[clientId] = PendingMessages(listOf())
+                        server.seenMessage[clientId] = PendingMessages(listOf())
+                    }
+                }
+
                 is ChatMessage -> {
+
                     server.broadCastChat(message,payload)
-                    println(payload)
                 }
 
                 is MessageDelivered -> {
+
                     server.broadcastChatStatus( payload.toId,server.registeredUsers[payload.toId]!!.socket,message,payload.type)
-                    println("got message Delivered for ${payload.toId}")
                 }
 
                 is MessageSeen -> {
-                    println("got message Seen for $payload")
+
                     server.broadcastChatStatus( payload.toId,server.registeredUsers[payload.toId]!!.socket,message,payload.type)
 
                 }
 
                 is BlockUserRequest -> {
-                    println("got request")
 
                     val blockList = server.registeredUsers[payload.fromId]?.blockedUser
                     if (blockList != null && !blockList.contains(payload.idToBeBlocked))  {
@@ -60,12 +99,10 @@ fun Route.WebSocketRoute() {
                             server.registeredUsers[payload.fromId]?.activeUser = list
                         }
                     }
-
-                    println(server.registeredUsers[payload.fromId]?.blockedUser.toString())
                 }
 
                 is UnblockUserRequest -> {
-                    println("got request")
+
                     val blockList = server.registeredUsers[payload.fromId]?.blockedUser
                     if (blockList != null && blockList.contains(payload.idToBeUnblocked))  {
                         val list : MutableList<String> = mutableListOf()
@@ -89,12 +126,10 @@ fun Route.WebSocketRoute() {
                     payload.contacts.forEach {contact ->
                         println(contact)
                         if (server.registeredUsers.keys.contains(contact)){
-                            println("matched")
                              var user : UserData? = null
                              server.registeredUsers[contact]?.let { user = it.asUserData() }
                             try {
-                                server.broadcastChat(socket, gson.toJson(user))
-                                println("User Sent")
+                                server.broadcastPendingChat(socket, gson.toJson(user))
                             }catch (e:Exception){
                                 println(e.message)
                             }
@@ -108,9 +143,9 @@ fun Route.WebSocketRoute() {
 
 fun Route.standardWebSocket(
         handleFrame: suspend (
-        socket: DefaultWebSocketServerSession,
-        message: String,
-        payload: BaseModel
+            socket: DefaultWebSocketServerSession,
+            message: String,
+            payload: BaseModel
     ) -> Unit
 ) {
     webSocket {
@@ -119,39 +154,6 @@ fun Route.standardWebSocket(
 
         val clientId = call.parameters["client_Id"].toString()
         val userName = call.parameters["user_name"].toString()
-
-//        if (clientId==null){
-//            close(CloseReason(CloseReason.Codes.VIOLATED_POLICY,"User not found"))
-//        }
-//        clientId.let {
-//
-//        }
-
-
-        val user = clientId.let { server.searchUserWithId(it) }
-//
-
-        if (user!=null){
-            server.registeredUsers[user]?.socket = this
-            server.pendingMessage[user]!!.messages.forEach {
-                server.broadcastChat(this,it)
-            }
-            server.deliveredMessage[user]!!.messages.forEach {
-                server.broadcastChat(this,it)
-            }
-            server.seenMessage[user]!!.messages.forEach {
-                server.broadcastChat(this,it)
-            }
-        } else {
-            server.registeredUsers[clientId] = User(
-                name = userName,
-                id = clientId,
-                socket = this
-            )
-            server.pendingMessage[clientId] = PendingMessages(listOf())
-            server.deliveredMessage[clientId] = PendingMessages(listOf())
-            server.seenMessage[clientId] = PendingMessages(listOf())
-        }
 
         try {
             incoming.consumeEach { frame ->
@@ -167,6 +169,8 @@ fun Route.standardWebSocket(
                          TYPE_USER_LAST_SEEN -> UserLastSeen::class.java
                          TYPE_UNBLOCK_USER_REQUEST -> UnblockUserRequest::class.java
                          TYPE_CONTACT_AVAILABLE -> ContactAvailable::class.java
+                         TYPE_REGISTER_USER -> CreateUser::class.java
+                         TYPE_CONNECT_TO_SERVER -> ConnectToServer::class.java
                           else -> BaseModel::class.java
                       }
 
@@ -178,12 +182,6 @@ fun Route.standardWebSocket(
             e.printStackTrace()
         } finally {
             // Handle disconnects
-//            val playerWithClientId = server.getRoomWithClientId(session.clientId)?.players?.find {
-//                it.clientId == session.clientId
-//            }
-//            if(playerWithClientId != null) {
-//                server.playerLeft(session.clientId)
-//            }
         }
     }
 }
