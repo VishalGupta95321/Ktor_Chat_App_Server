@@ -2,10 +2,10 @@ package com.example
 
 import io.ktor.server.routing.*
 import io.ktor.http.*
-import io.ktor.websocket.*
+import io.ktor.server.websocket.*
 import io.ktor.server.websocket.*
 import java.time.*
-import io.ktor.serialization.gson.*
+import io.ktor.serialization.kotlinx.json.gson.*
 import io.ktor.server.plugins.*
 import org.slf4j.event.*
 import io.ktor.server.request.*

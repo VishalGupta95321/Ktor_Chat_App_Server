@@ -5,11 +5,8 @@ import com.google.gson.Gson
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
 
-val gson = Gson()
-var users = listOf<String>()
-
 fun Application.configureRouting() {
-    install(Routing){
+    install(Routing) {
         WebSocketRoute()
     }
 }

@@ -79,7 +79,7 @@ class ChatServer {
         try {
             socket.send(Frame.Text(message))
         } catch (e: Exception) {
-           println(e.message)
+            println(e.message)
         }
     }
 
